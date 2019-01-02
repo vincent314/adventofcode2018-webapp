@@ -1,5 +1,8 @@
 <template>
-    <div id="d3"></div>
+    <div>
+        <p>Max Area Size = {{largestAreaSize}}</p>
+        <div id="d3"></div>
+    </div>
 </template>
 <script lang="ts">
     import { Component, Vue } from "vue-property-decorator";
@@ -7,8 +10,8 @@
     import flatten from 'lodash-es/flatten'
 
     interface Point {
-        x:number;
-        y:number;
+        x: number;
+        y: number;
         destinationId: number;
         closestId: number;
     }
@@ -17,6 +20,8 @@
         width: number,
         height: number,
         points: Point[][];
+        excludeIds: number[];
+        largestAreaSize: number;
     }
 
     const colors = ["#F0F8FF", "#FAEBD7", "#00FFFF", "#7FFFD4", "#F0FFFF", "#F5F5DC", "#FFE4C4", "#000000", "#FFEBCD", "#0000FF", "#8A2BE2", "#A52A2A", "#DEB887", "#5F9EA0", "#7FFF00", "#D2691E", "#FF7F50",
@@ -32,6 +37,8 @@
 
     @Component({})
     export default class GridViz extends Vue {
+        public largestAreaSize: number = 0;
+
         getGrid() {
             return this.$axios.get<Grid>('http://localhost:9000/day6/grid').then(response => response.data)
         }
@@ -61,14 +68,22 @@
                     if (d.destinationId != null) {
                         return "purple"
                     } else {
-                        return colors[d.closestId];
+                        if (grid.excludeIds.find(id => d.closestId === id)) {
+                            return "#FFFFFF"
+                        } else {
+                            return colors[d.closestId];
+                        }
                     }
                 });
         }
 
         mounted() {
             const self = this;
-            self.getGrid().then(grid => this.renderGrid(grid));
+            self.getGrid().then(grid => {
+                console.log(`Largest Area = ${grid.largestAreaSize}`);
+                this.largestAreaSize = grid.largestAreaSize;
+                this.renderGrid(grid)
+            });
 
         }
 
